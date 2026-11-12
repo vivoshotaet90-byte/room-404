@@ -1,4 +1,3 @@
-
 name: Android APK Build
 
 on:
@@ -15,6 +14,19 @@ jobs:
       - name: Download project
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        run: |
+          sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-35" "build-tools;35.0.1" "ndk;28.1.13356709" "cmake;3.10.2.4988404"
+
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:
@@ -22,8 +34,15 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      - name: Build Android APK
+      - name: Build APK
         run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.tres <<SETTINGS
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          SETTINGS
           godot --headless --path . --editor --quit
           godot --headless --path . --export-debug "Android" Room404.apk
 
@@ -32,4 +51,3 @@ jobs:
         with:
           name: Room404-Android
           path: Room404.apk
-
